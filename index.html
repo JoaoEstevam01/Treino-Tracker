@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreinoTracker - Acompanhamento de Treinos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-dumbbell"></i> TreinoTracker</h1>
+                <div class="header-controls">
+                    <button id="themeToggle" class="btn btn-secondary">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="addSampleDataBtn" class="btn btn-secondary">
+                        <i class="fas fa-flask"></i>
+                        Dados de Teste
+                    </button>
+                    <button id="exportBtn" class="btn btn-secondary">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button id="importBtn" class="btn btn-secondary">
+                        <i class="fas fa-upload"></i>
+                    </button>
+                    <button id="resetBtn" class="btn btn-danger">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="nav-content">
+                <button class="nav-item active" data-day="monday">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Segunda</span>
+                </button>
+                <button class="nav-item" data-day="tuesday">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Terça</span>
+                </button>
+                <button class="nav-item" data-day="wednesday">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Quarta</span>
+                </button>
+                <button class="nav-item" data-day="thursday">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Quinta</span>
+                </button>
+                <button class="nav-item" data-day="friday">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Sexta</span>
+                </button>
+                <button class="nav-item" data-day="saturday">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Sábado</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Workout Section -->
+            <section class="workout-section">
+                <div class="section-header">
+                    <h2 id="currentDayTitle">Segunda-feira</h2>
+                    <div class="section-controls">
+                        <button id="addMultipleExercisesBtn" class="btn btn-secondary">
+                            <i class="fas fa-list"></i>
+                            Múltiplos
+                        </button>
+                        <button id="addExerciseBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Exercício
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Daily Summary -->
+                <div id="dailySummary" class="daily-summary">
+                    <!-- Resumo será inserido aqui dinamicamente -->
+                </div>
+                
+                <div id="exercisesContainer" class="exercises-container">
+                    <!-- Exercises will be dynamically added here -->
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-chart-line"></i> Progressão</h2>
+                    <select id="exerciseSelect" class="select">
+                        <option value="">Selecione um exercício</option>
+                    </select>
+                </div>
+                
+                <div id="progressChart" class="chart-container">
+                    <canvas id="progressCanvas"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <!-- Add Exercise Modal -->
+        <div id="addExerciseModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Adicionar Exercício</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="exerciseName">Nome do Exercício:</label>
+                        <input type="text" id="exerciseName" placeholder="Ex: Agachamento livre" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelExerciseBtn" class="btn btn-secondary">Cancelar</button>
+                    <button id="saveExerciseBtn" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Multiple Exercises Modal -->
+        <div id="addMultipleExercisesModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Adicionar Múltiplos Exercícios</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="multipleExercises">Lista de Exercícios:</label>
+                        <textarea id="multipleExercises" rows="8" placeholder="Digite um exercício por linha:&#10;Supino reto&#10;Agachamento livre&#10;Desenvolvimento&#10;Rosca bíceps&#10;Tríceps testa" required></textarea>
+                        <small class="form-help">Digite um exercício por linha. Você pode definir modelos depois.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="addTemplates" checked>
+                            Adicionar modelos padrão para exercícios comuns
+                        </label>
+                        <small class="form-help">Adiciona automaticamente templates como "8-12" para exercícios conhecidos</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelMultipleExercisesBtn" class="btn btn-secondary">Cancelar</button>
+                    <button id="saveMultipleExercisesBtn" class="btn btn-primary">Adicionar Exercícios</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Set Modal -->
+        <div id="addSetModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Adicionar Série</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="reps">Repetições:</label>
+                        <input type="text" id="reps" placeholder="Ex: 12 ou 10-15" required>
+                        <small class="form-help">Digite um número (ex: 12) ou uma faixa (ex: 10-15)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="weight">Carga (kg):</label>
+                        <input type="number" id="weight" min="0" step="0.5" placeholder="Ex: 30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="setDate">Data do treino:</label>
+                        <input type="date" id="setDate" required>
+                        <small class="form-help">Data atual por padrão. Altere para testar progressão</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelSetBtn" class="btn btn-secondary">Cancelar</button>
+                    <button id="saveSetBtn" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Add Set Modal -->
+        <div id="quickAddSetModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Adicionar Série Rápida</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Modelo do exercício:</label>
+                        <div class="exercise-template">
+                            <span id="quickTemplateReps" class="template-reps"></span>
+                            <span class="template-label">repetições</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="quickWeight">Carga (kg):</label>
+                        <input type="number" id="quickWeight" min="0" step="0.5" placeholder="Ex: 30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quickDate">Data do treino:</label>
+                        <input type="date" id="quickDate" required>
+                        <small class="form-help">Data atual por padrão</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelQuickSetBtn" class="btn btn-secondary">Cancelar</button>
+                    <button id="saveQuickSetBtn" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Set Exercise Template Modal -->
+        <div id="setTemplateModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Definir Modelo do Exercício</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="setTemplateReps">Repetições do modelo:</label>
+                        <input type="text" id="setTemplateReps" placeholder="Ex: 12 ou 10-15" required>
+                        <small class="form-help">Este será o padrão para todas as séries deste exercício</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelTemplateBtn" class="btn btn-secondary">Cancelar</button>
+                    <button id="saveTemplateBtn" class="btn btn-primary">Salvar Modelo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Exercise Modal -->
+        <div id="editExerciseModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Editar Exercício</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editExerciseName">Nome do Exercício:</label>
+                        <input type="text" id="editExerciseName" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelEditExerciseBtn" class="btn btn-secondary">Cancelar</button>
+                    <button id="saveEditExerciseBtn" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Set Modal -->
+        <div id="editSetModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Editar Série</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editReps">Repetições:</label>
+                        <input type="text" id="editReps" placeholder="Ex: 12 ou 10-15" required>
+                        <small class="form-help">Digite um número (ex: 12) ou uma faixa (ex: 10-15)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="editWeight">Carga (kg):</label>
+                        <input type="number" id="editWeight" min="0" step="0.5" placeholder="Ex: 30" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editDate">Data do treino:</label>
+                        <input type="date" id="editDate" required>
+                        <small class="form-help">Altere a data para testar a progressão</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancelEditSetBtn" class="btn btn-secondary">Cancelar</button>
+                    <button id="saveEditSetBtn" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden file input for import -->
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
