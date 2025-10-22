@@ -60,6 +60,7 @@ O **TreinoTracker** é uma aplicação web moderna e intuitiva desenvolvida para
 - **Adicionar exercícios**: Crie exercícios personalizados para cada dia
 - **Séries e cargas**: Registre repetições e peso para cada série
 - **Edição completa**: Modifique ou exclua exercícios e séries facilmente
+- **Edição rápida**: Clique no ícone de edição no título do exercício para alterar o nome diretamente
 - **Data automática**: Cada série é marcada com a data de criação
 
 ### 📊 Acompanhamento de Progressão
@@ -78,11 +79,86 @@ O **TreinoTracker** é uma aplicação web moderna e intuitiva desenvolvida para
 - **Animações suaves**: Transições e efeitos visuais modernos
 - **UX intuitiva**: Interface limpa e fácil de usar
 
-### 🔧 Funcionalidades Extras
+## 🔧 Funcionalidades Extras
 - **Export/Import**: Faça backup dos seus dados
+- **Export gráfico**: Salve gráficos em PDF ou imagem para compartilhamento
 - **Reset completo**: Limpe todos os dados quando necessário
 - **Tema automático**: Lembra sua preferência de tema
 - **Atalhos de teclado**: Enter para salvar, Escape para cancelar
+- **Ranking pessoal**: Sistema de incentivos para consistência
+- **Cálculo de Volume Total**: Métrica fundamental para hipertrofia (séries × repetições × carga)
+- **Estimativa de 1RM**: Cálculo do One-Rep Max estimado usando fórmulas padrão
+- **Séries especiais**: Marcação de aquecimento, dropset, FST-7
+- **Supersets**: Agrupamento de exercícios feitos em sequência
+- **Reordenar exercícios**: Mude a ordem dos exercícios do dia
+- **Banco de exercícios com tags**: Adicione tags como "Peito", "Tríceps" para futuras análises
+
+## 📱 Progressive Web App (PWA)
+
+O TreinoTracker é uma **Progressive Web App** completa, oferecendo uma experiência nativa diretamente no navegador:
+
+### ✨ **Funcionalidades PWA:**
+- **Instalação Nativa**: Instale como um app real no seu dispositivo
+- **Offline Support**: Funciona sem conexão à internet após primeira carga
+- **Cache Inteligente**: Service Worker armazena recursos para acesso offline
+- **Notificações**: Lembretes para treinos (futuro)
+- **Tela Cheia**: Interface imersiva sem barras do navegador
+- **Ícone na Tela Inicial**: Acesso rápido como app nativo
+
+### 🚀 **Como Instalar:**
+
+#### **Android/Chrome:**
+1. Abra o site no Chrome
+2. Toque no menu (⋮) > "Adicionar à tela inicial"
+3. Confirme a instalação
+
+#### **iOS/Safari:**
+1. Abra o site no Safari
+2. Toque no botão compartilhar (□⬆️)
+3. Role e toque em "Adicionar à Tela de Início"
+4. Confirme a instalação
+
+#### **Desktop/Chrome:**
+1. Abra o site no Chrome
+2. Clique no ícone de instalação na barra de endereço
+3. Ou vá em Menu > "Instalar TreinoTracker"
+
+#### **Desktop/Edge:**
+1. Abra o site no Edge
+2. Clique no ícone de instalação na barra de endereço
+3. Ou vá em Menu > "Aplicativos > Instalar este site como um aplicativo"
+
+### 🔄 **Modo Offline:**
+- **Primeira Carga**: Baixe todos os recursos necessários
+- **Cache Automático**: Service Worker mantém app funcional offline
+- **Sincronização**: Dados são salvos localmente e sincronizados quando online
+- **Atualizações**: App se atualiza automaticamente quando volta online
+
+### 📋 **Manifest PWA:**
+```json
+{
+  "name": "TreinoTracker - Acompanhamento de Treinos",
+  "short_name": "TreinoTracker",
+  "description": "Aplicativo completo para acompanhamento de treinos",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "image/imagem_1.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+### 🔧 **Service Worker:**
+- **Cache Strategy**: Cache-first para recursos estáticos, network-first para dados
+- **Background Sync**: Sincronização automática quando volta online
+- **Push Notifications**: Preparado para notificações futuras
+- **Version Control**: Controle de versão para atualizações suaves
 
 ## 🚀 Como Usar
 
@@ -127,6 +203,7 @@ O **TreinoTracker** é uma aplicação web moderna e intuitiva desenvolvida para
 - **Modular**: Código organizado em classes e funções específicas
 - **Responsivo**: Design adaptativo para todos os dispositivos
 - **PWA Ready**: Estrutura preparada para Progressive Web App
+- **Offline Support**: Funciona sem conexão à internet após primeira carga
 
 ### **Recursos Técnicos:**
 - **Validação Robusta**: Sistema completo de validação de dados

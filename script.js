@@ -18,7 +18,7 @@ class TreinoTracker {
         this.chart = null;
         this.db = null;
         this.dbName = 'TreinoTrackerDB';
-        this.dbVersion = 1;
+        this.dbVersion = 4; // Incrementado para nova versão com novos campos: type (sets), supersetWith (exercises), order (exercises), tags (exercises)
         
         this.init();
     }
@@ -35,6 +35,7 @@ class TreinoTracker {
         this.renderDailySummary();
         this.updateExerciseSelect();
         this.setupChart();
+        this.updatePersonalRanking();
         this.setupAutoBackup();
     }
 
@@ -165,6 +166,19 @@ class TreinoTracker {
         // Select de exercício para progressão
         document.getElementById('exerciseSelect').addEventListener('change', (e) => {
             this.updateProgressChart(e.target.value);
+        });
+
+        // Select de tipo de progressão
+        document.getElementById('progressTypeSelect').addEventListener('change', (e) => {
+            const selectedExercise = document.getElementById('exerciseSelect').value;
+            if (selectedExercise) {
+                this.updateProgressChart(selectedExercise);
+            }
+        });
+
+        // Select de período do ranking
+        document.getElementById('rankingPeriodSelect').addEventListener('change', (e) => {
+            this.updatePersonalRanking();
         });
 
         // Enter nos inputs dos modais
@@ -454,6 +468,9 @@ class TreinoTracker {
             <div class="exercise-card">
                 <div class="exercise-header">
                     <h3 class="exercise-title">
+                        <button class="btn btn-sm btn-secondary edit-exercise-btn" onclick="app.editExercise(${index})">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         ${exercise.name}
                         ${exercise.template ? `<span class="exercise-template-badge"><i class="fas fa-template"></i>${this.formatReps(exercise.template)}</span>` : ''}
                         ${this.getProgressIndicator(exercise)}
@@ -480,9 +497,6 @@ class TreinoTracker {
                                 Editar Modelo
                             </button>
                         `}
-                        <button class="btn btn-sm btn-secondary" onclick="app.editExercise(${index})">
-                            <i class="fas fa-edit"></i>
-                        </button>
                         <button class="btn btn-sm btn-danger" onclick="app.deleteExercise(${index})">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -496,7 +510,10 @@ class TreinoTracker {
                         </div>
                         ${exercise.sets.length > 0 ? `
                             <div class="sets-list">
-                                ${exercise.sets.map((set, setIndex) => `
+                                ${exercise.sets
+                                    .map((set, originalIndex) => ({ set, originalIndex }))
+                                    .sort((a, b) => new Date(a.set.date) - new Date(b.set.date))
+                                    .map(({ set, originalIndex }, sortedIndex) => `
                                     <div class="set-item">
                                         <div class="set-info">
                                             <span class="set-reps">${this.formatReps(set.reps)}</span>
@@ -504,10 +521,10 @@ class TreinoTracker {
                                             <span class="set-date">${this.formatDate(set.date)}</span>
                                         </div>
                                         <div class="set-controls">
-                                            <button class="btn btn-sm btn-secondary" onclick="app.editSet(${index}, ${setIndex})">
+                                            <button class="btn btn-sm btn-secondary" onclick="app.editSet(${index}, ${originalIndex})">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-danger" onclick="app.deleteSet(${index}, ${setIndex})">
+                                            <button class="btn btn-sm btn-danger" onclick="app.deleteSet(${index}, ${originalIndex})">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -681,32 +698,34 @@ class TreinoTracker {
         const repsInput = document.getElementById('reps').value.trim();
         const weight = parseFloat(document.getElementById('weight').value);
         const dateInput = document.getElementById('setDate').value;
-        
+        const setType = document.getElementById('setType').value;
+
         if (!repsInput || !weight || !dateInput) {
             alert('Por favor, preencha todos os campos.');
             return;
         }
-        
+
         // Valida e processa as repetições (número único ou faixa)
         const reps = this.parseReps(repsInput);
         if (!reps) {
             alert('Formato de repetições inválido. Use um número (ex: 12) ou uma faixa (ex: 10-15).');
             return;
         }
-        
+
         // Valida a data
         const selectedDate = new Date(dateInput);
         if (isNaN(selectedDate.getTime())) {
             alert('Data inválida. Por favor, selecione uma data válida.');
             return;
         }
-        
+
         const set = {
             reps: reps,
             weight: weight,
-            date: selectedDate.toISOString()
+            date: selectedDate.toISOString(),
+            type: setType || 'normal'
         };
-        
+
         this.data[this.currentDay][this.currentExerciseIndex].sets.push(set);
         this.saveData();
         this.renderCurrentDay();
@@ -763,18 +782,19 @@ class TreinoTracker {
     editSet(exerciseIndex, setIndex) {
         this.currentExerciseIndex = exerciseIndex;
         this.currentSetIndex = setIndex;
-        
+
         const set = this.data[this.currentDay][exerciseIndex].sets[setIndex];
-        
+
         // Preenche os campos com os valores atuais
         document.getElementById('editReps').value = set.reps;
         document.getElementById('editWeight').value = set.weight;
-        
+        document.getElementById('editSetType').value = set.type || 'normal';
+
         // Converte a data ISO para formato YYYY-MM-DD do input date
         const date = new Date(set.date);
         const formattedDate = date.toISOString().split('T')[0];
         document.getElementById('editDate').value = formattedDate;
-        
+
         this.showModal('editSetModal');
         document.getElementById('editReps').focus();
     }
@@ -786,31 +806,33 @@ class TreinoTracker {
         const repsInput = document.getElementById('editReps').value.trim();
         const weight = parseFloat(document.getElementById('editWeight').value);
         const dateInput = document.getElementById('editDate').value;
-        
+        const setType = document.getElementById('editSetType').value;
+
         if (!repsInput || !weight || !dateInput) {
             alert('Por favor, preencha todos os campos.');
             return;
         }
-        
+
         // Valida e processa as repetições (número único ou faixa)
         const reps = this.parseReps(repsInput);
         if (!reps) {
             alert('Formato de repetições inválido. Use um número (ex: 12) ou uma faixa (ex: 10-15).');
             return;
         }
-        
+
         // Valida a data
         const selectedDate = new Date(dateInput);
         if (isNaN(selectedDate.getTime())) {
             alert('Data inválida. Por favor, selecione uma data válida.');
             return;
         }
-        
+
         // Atualiza a série
         this.data[this.currentDay][this.currentExerciseIndex].sets[this.currentSetIndex].reps = reps;
         this.data[this.currentDay][this.currentExerciseIndex].sets[this.currentSetIndex].weight = weight;
         this.data[this.currentDay][this.currentExerciseIndex].sets[this.currentSetIndex].date = selectedDate.toISOString();
-        
+        this.data[this.currentDay][this.currentExerciseIndex].sets[this.currentSetIndex].type = setType || 'normal';
+
         this.saveData();
         this.renderCurrentDay();
         this.renderDailySummary();
@@ -1039,20 +1061,29 @@ class TreinoTracker {
      */
     updateProgressChart(exerciseName) {
         if (!this.chart) return;
-        
-        const progressData = this.getExerciseProgress(exerciseName);
-        
+
+        const progressType = document.getElementById('progressTypeSelect').value;
+        const progressData = this.getExerciseProgress(exerciseName, progressType);
+
+        // Update chart label based on progress type
+        const labels = {
+            'weight': 'Carga (kg)',
+            'volume': 'Volume (kg)',
+            '1rm': '1RM Estimado (kg)'
+        };
+        this.chart.data.datasets[0].label = labels[progressType] || 'Carga (kg)';
+
         this.chart.data.labels = progressData.labels;
-        this.chart.data.datasets[0].data = progressData.weights;
+        this.chart.data.datasets[0].data = progressData.values;
         this.chart.update();
     }
 
     /**
      * Obtém dados de progressão de um exercício
      */
-    getExerciseProgress(exerciseName) {
+    getExerciseProgress(exerciseName, progressType = 'weight') {
         const allSets = [];
-        
+
         // Coleta todas as séries do exercício de todos os dias
         Object.values(this.data).forEach(dayExercises => {
             dayExercises.forEach(exercise => {
@@ -1060,34 +1091,72 @@ class TreinoTracker {
                     exercise.sets.forEach(set => {
                         allSets.push({
                             weight: set.weight,
+                            reps: set.reps,
                             date: new Date(set.date)
                         });
                     });
                 }
             });
         });
-        
+
         // Ordena por data
         allSets.sort((a, b) => a.date - b.date);
-        
-        // Agrupa por data e pega o maior peso do dia
-        const dailyMax = {};
+
+        // Agrupa por data e calcula o valor baseado no tipo de progressão
+        const dailyValues = {};
         allSets.forEach(set => {
             const dateKey = set.date.toDateString();
-            if (!dailyMax[dateKey] || set.weight > dailyMax[dateKey].weight) {
-                dailyMax[dateKey] = set;
+            if (!dailyValues[dateKey]) {
+                dailyValues[dateKey] = [];
             }
+            dailyValues[dateKey].push(set);
         });
-        
+
         const labels = [];
-        const weights = [];
-        
-        Object.values(dailyMax).forEach(set => {
-            labels.push(this.formatDate(set.date.toISOString()));
-            weights.push(set.weight);
+        const values = [];
+
+        Object.keys(dailyValues).sort((a, b) => new Date(a) - new Date(b)).forEach(dateKey => {
+            const daySets = dailyValues[dateKey];
+            let value;
+
+            switch (progressType) {
+                case 'weight':
+                    // Maior peso do dia
+                    value = Math.max(...daySets.map(set => set.weight));
+                    break;
+                case 'volume':
+                    // Volume total do dia (peso × repetições)
+                    value = daySets.reduce((total, set) => {
+                        const reps = this.getNumericReps(set.reps);
+                        return total + (set.weight * reps);
+                    }, 0);
+                    break;
+                case '1rm':
+                    // Maior 1RM estimado do dia
+                    value = Math.max(...daySets.map(set => this.calculate1RM(set.weight, this.getNumericReps(set.reps))));
+                    break;
+                default:
+                    value = Math.max(...daySets.map(set => set.weight));
+            }
+
+            labels.push(this.formatDate(daySets[0].date.toISOString()));
+            values.push(Math.round(value * 100) / 100); // Arredonda para 2 casas decimais
         });
-        
-        return { labels, weights };
+
+        return { labels, values };
+    }
+
+    /**
+     * Converte repetições para valor numérico (média para faixas)
+     */
+    getNumericReps(reps) {
+        if (typeof reps === 'number') {
+            return reps;
+        } else if (typeof reps === 'string' && reps.includes('-')) {
+            const [min, max] = reps.split('-').map(Number);
+            return (min + max) / 2; // Média da faixa
+        }
+        return 10; // Fallback
     }
 
     /**
@@ -1165,6 +1234,24 @@ class TreinoTracker {
     }
 
     /**
+     * Calcula volume de um exercício (peso × repetições)
+     */
+    calculateVolume(exercise) {
+        return exercise.sets.reduce((total, set) => {
+            const reps = typeof set.reps === 'number' ? set.reps : 10; // Default to 10 for ranges
+            return total + (set.weight * reps);
+        }, 0);
+    }
+
+    /**
+     * Calcula 1RM estimado usando fórmula de Brzycki
+     */
+    calculate1RM(weight, reps) {
+        if (reps === 1) return weight;
+        return Math.round(weight / (1.0278 - (0.0278 * reps)));
+    }
+
+    /**
      * Calcula resumo diário
      */
     getDailySummary() {
@@ -1174,11 +1261,17 @@ class TreinoTracker {
         const totalWeight = exercises.reduce((sum, exercise) => {
             return sum + exercise.sets.reduce((setSum, set) => setSum + (set.weight * (typeof set.reps === 'number' ? set.reps : 10)), 0);
         }, 0);
-        
+
+        // Calculate total volume (weight × reps for all sets)
+        const totalVolume = exercises.reduce((sum, exercise) => {
+            return sum + this.calculateVolume(exercise);
+        }, 0);
+
         return {
             exercises: totalExercises,
             sets: totalSets,
-            totalWeight: Math.round(totalWeight)
+            totalWeight: Math.round(totalWeight),
+            totalVolume: Math.round(totalVolume)
         };
     }
 
@@ -1188,7 +1281,7 @@ class TreinoTracker {
     renderDailySummary() {
         const summary = this.getDailySummary();
         const summaryElement = document.getElementById('dailySummary');
-        
+
         if (summaryElement) {
             summaryElement.innerHTML = `
                 <div class="summary-stats">
@@ -1203,6 +1296,10 @@ class TreinoTracker {
                     <div class="stat-item">
                         <span class="stat-number">${summary.totalWeight.toLocaleString()}</span>
                         <span class="stat-label">kg Total</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">${summary.totalVolume.toLocaleString()}</span>
+                        <span class="stat-label">Volume Total</span>
                     </div>
                 </div>
             `;
@@ -1436,6 +1533,137 @@ class TreinoTracker {
         } catch (error) {
             console.error('Erro ao restaurar backup:', error);
         }
+    }
+
+    /**
+     * Atualiza ranking pessoal
+     */
+    updatePersonalRanking() {
+        const period = document.getElementById('rankingPeriodSelect').value;
+        const rankingData = this.calculatePersonalRanking(period);
+        this.renderPersonalRanking(rankingData);
+    }
+
+    /**
+     * Calcula ranking pessoal baseado no período
+     */
+    calculatePersonalRanking(period) {
+        const now = new Date();
+        let startDate;
+
+        switch (period) {
+            case 'week':
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                break;
+            case 'month':
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                break;
+            case 'all':
+            default:
+                startDate = new Date(0); // Beginning of time
+                break;
+        }
+
+        const exerciseStats = {};
+
+        // Coleta dados de todos os dias
+        Object.values(this.data).forEach(dayExercises => {
+            dayExercises.forEach(exercise => {
+                if (!exerciseStats[exercise.name]) {
+                    exerciseStats[exercise.name] = {
+                        name: exercise.name,
+                        totalVolume: 0,
+                        totalSets: 0,
+                        maxWeight: 0,
+                        workoutDays: new Set()
+                    };
+                }
+
+                exercise.sets.forEach(set => {
+                    const setDate = new Date(set.date);
+                    if (setDate >= startDate) {
+                        const reps = this.getNumericReps(set.reps);
+                        const volume = set.weight * reps;
+
+                        exerciseStats[exercise.name].totalVolume += volume;
+                        exerciseStats[exercise.name].totalSets += 1;
+                        exerciseStats[exercise.name].maxWeight = Math.max(exerciseStats[exercise.name].maxWeight, set.weight);
+                        exerciseStats[exercise.name].workoutDays.add(setDate.toDateString());
+                    }
+                });
+            });
+        });
+
+        // Converte para array e ordena por volume total
+        const ranking = Object.values(exerciseStats)
+            .filter(exercise => exercise.totalSets > 0)
+            .sort((a, b) => b.totalVolume - a.totalVolume);
+
+        return ranking;
+    }
+
+    /**
+     * Renderiza ranking pessoal
+     */
+    renderPersonalRanking(rankingData) {
+        const container = document.getElementById('personalRanking');
+
+        if (rankingData.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-trophy"></i>
+                    <h3>Nenhum dado encontrado</h3>
+                    <p>Adicione séries de treino para ver seu ranking pessoal!</p>
+                </div>
+            `;
+            return;
+        }
+
+        const period = document.getElementById('rankingPeriodSelect').value;
+        const periodNames = {
+            'week': 'esta semana',
+            'month': 'este mês',
+            'all': 'todo o período'
+        };
+
+        container.innerHTML = `
+            <div class="ranking-header">
+                <h3>Top Exercícios de ${periodNames[period]}</h3>
+                <p>Ordenado por volume total (carga × repetições)</p>
+            </div>
+            <div class="ranking-list">
+                ${rankingData.map((exercise, index) => `
+                    <div class="ranking-item ${index < 3 ? 'top-' + (index + 1) : ''}">
+                        <div class="ranking-position">
+                            ${index < 3 ? `<i class="fas fa-medal medal-${index + 1}"></i>` : `<span class="position-number">${index + 1}</span>`}
+                        </div>
+                        <div class="ranking-content">
+                            <div class="ranking-exercise">
+                                <h4>${exercise.name}</h4>
+                                <div class="ranking-stats">
+                                    <span class="stat-item">
+                                        <i class="fas fa-weight-hanging"></i>
+                                        ${exercise.totalVolume.toLocaleString()} kg total
+                                    </span>
+                                    <span class="stat-item">
+                                        <i class="fas fa-list"></i>
+                                        ${exercise.totalSets} série${exercise.totalSets !== 1 ? 's' : ''}
+                                    </span>
+                                    <span class="stat-item">
+                                        <i class="fas fa-dumbbell"></i>
+                                        ${exercise.maxWeight}kg máximo
+                                    </span>
+                                    <span class="stat-item">
+                                        <i class="fas fa-calendar"></i>
+                                        ${exercise.workoutDays.size} dia${exercise.workoutDays.size !== 1 ? 's' : ''}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     }
 
     /**

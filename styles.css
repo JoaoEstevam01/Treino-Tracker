@@ -164,7 +164,8 @@ body {
 
 /* Sections */
 .workout-section,
-.progress-section {
+.progress-section,
+.ranking-section {
     background-color: var(--bg-primary);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow);
@@ -304,6 +305,9 @@ body {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .exercise-controls {
@@ -377,6 +381,133 @@ body {
 .set-controls {
     display: flex;
     gap: 0.25rem;
+}
+
+/* Ranking Section */
+.ranking-section {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.ranking-container {
+    padding: 1.5rem;
+}
+
+.ranking-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.ranking-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.ranking-header p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    transition: var(--transition);
+}
+
+.ranking-item:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+}
+
+.ranking-item.top-1 {
+    border-color: #ffd700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), var(--bg-secondary));
+}
+
+.ranking-item.top-2 {
+    border-color: #c0c0c0;
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), var(--bg-secondary));
+}
+
+.ranking-item.top-3 {
+    border-color: #cd7f32;
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), var(--bg-secondary));
+}
+
+.ranking-position {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.medal-1 {
+    color: #ffd700;
+    font-size: 1.5rem;
+}
+
+.medal-2 {
+    color: #c0c0c0;
+    font-size: 1.5rem;
+}
+
+.medal-3 {
+    color: #cd7f32;
+    font-size: 1.5rem;
+}
+
+.position-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.ranking-content {
+    flex: 1;
+}
+
+.ranking-exercise h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.ranking-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.stat-item i {
+    color: var(--primary-color);
+    font-size: 0.75rem;
 }
 
 /* Chart Container */
@@ -551,6 +682,7 @@ body {
     font-size: 0.75rem;
     font-weight: 500;
     margin-left: 0.5rem;
+    vertical-align: middle;
 }
 
 .exercise-template-badge i {
@@ -567,6 +699,7 @@ body {
     font-size: 0.75rem;
     font-weight: 600;
     margin-left: 0.5rem;
+    vertical-align: middle;
 }
 
 .progress-indicator.positive {
@@ -724,6 +857,15 @@ body {
     
     .exercise-controls {
         justify-content: center;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .exercise-controls .btn {
+        width: 100%;
+        font-size: 0.8rem;
+        padding: 0.6rem 0.5rem;
     }
     
     .exercise-body {
@@ -742,6 +884,11 @@ body {
     
     .set-controls {
         justify-content: center;
+    }
+    
+    .ranking-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
     
     .modal-content {
@@ -802,7 +949,8 @@ body {
     }
     
     .workout-section,
-    .progress-section {
+    .progress-section,
+    .ranking-section {
         box-shadow: none;
         border: 1px solid #ccc;
     }
